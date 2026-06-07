@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>StaffTrack — Offline</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0F172A;
+      --surface: #1E293B;
+      --border: rgba(255,255,255,0.08);
+      --text: #F1F5F9;
+      --muted: #94A3B8;
+      --amber: #F59E0B;
+      --blue: #3B82F6;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      text-align: center;
+    }
+
+    .icon-wrap {
+      width: 80px;
+      height: 80px;
+      border-radius: 24px;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.8; transform: scale(0.97); }
+    }
+
+    .icon-wrap svg { width: 36px; height: 36px; color: var(--amber); }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      max-width: 280px;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem 1.5rem;
+      width: 100%;
+      max-width: 320px;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.75rem;
+    }
+
+    .tip {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.625rem;
+      margin-bottom: 0.625rem;
+      font-size: 0.82rem;
+      color: var(--text);
+      line-height: 1.5;
+      text-align: left;
+    }
+
+    .tip:last-child { margin-bottom: 0; }
+
+    .tip-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--amber);
+      margin-top: 0.45rem;
+      flex-shrink: 0;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #EF4444;
+      display: inline-block;
+      margin-right: 6px;
+      animation: blink 1.5s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: var(--blue);
+      color: white;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      max-width: 320px;
+      transition: opacity 0.15s;
+    }
+
+    .btn:active { opacity: 0.8; }
+    .btn:hover  { opacity: 0.9; }
+
+    .footer {
+      margin-top: 2.5rem;
+      font-size: 0.72rem;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="1" y1="1" x2="23" y2="23"/>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+        <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+        <line x1="12" y1="20" x2="12.01" y2="20"/>
+      </svg>
+    </div>
+
+    <h1>You&apos;re Offline</h1>
+    <p>No internet connection detected. StaffTrack needs a connection to sync your attendance data.</p>
+
+    <div class="status-bar">
+      <span class="status-dot"></span>
+      <span id="status-text">Waiting for connection...</span>
+    </div>
+
+    <div class="card">
+      <div class="card-title">What you can still do</div>
+      <div class="tip">
+        <div class="tip-dot"></div>
+        <span>View your cached attendance history</span>
+      </div>
+      <div class="tip">
+        <div class="tip-dot"></div>
+        <span>If offline punch is enabled, open the app and punch — it will sync automatically when you reconnect</span>
+      </div>
+      <div class="tip">
+        <div class="tip-dot"></div>
+        <span>Check your shift schedule (cached)</span>
+      </div>
+    </div>
+
+    <button class="btn" onclick="tryReconnect()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+      Try again
+    </button>
+
+    <div class="footer">
+      StaffTrack PWA — Your punch data is safe offline
+    </div>
+  </div>
+
+  <script>
+    // Auto-redirect when connection is restored
+    window.addEventListener("online", () => {
+      document.getElementById("status-text").textContent = "Connection restored! Redirecting...";
+      document.querySelector(".status-dot").style.background = "#10B981";
+      document.querySelector(".status-dot").style.animation = "none";
+      setTimeout(() => { window.location.href = "/dashboard"; }, 1500);
+    });
+
+    function tryReconnect() {
+      if (navigator.onLine) {
+        window.location.href = "/dashboard";
+      } else {
+        const btn = document.querySelector(".btn");
+        btn.textContent = "Still offline...";
+        setTimeout(() => {
+          btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Try again`;
+        }, 2000);
+      }
+    }
+  </script>
+</body>
+</html>
