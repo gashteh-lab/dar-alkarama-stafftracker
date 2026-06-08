@@ -1,4 +1,5 @@
 // app/api/admin/branches/route.ts
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest, hasRole, createAuditLog } from "@/lib/auth";
 import prisma from "@/lib/db/prisma";
