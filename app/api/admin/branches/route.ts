@@ -1,4 +1,3 @@
-export const dynamic = "force-dynamic";
 // app/api/admin/branches/route.ts
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
@@ -6,15 +5,20 @@ import { getSessionFromRequest, hasRole, createAuditLog } from "@/lib/auth";
 import prisma from "@/lib/db/prisma";
 
 export async function GET(req: NextRequest) {
-  const session = await getSessionFromRequest(req);
-  if (!session || !hasRole(session.role, "MANAGER")) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await getSessionFromRequest(req);
+    if (!session || !hasRole(session.role, "MANAGER")) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+    const branches = await prisma.branch.findMany({
+      orderBy: { name: "asc" },
+      include: { _count: { select: { staff: true, departments: true } } },
+    });
+    return NextResponse.json({ success: true, data: branches });
+  } catch (error) {
+    console.error("Database error during Vercel build:", error);
+    return NextResponse.json({ success: false, error: "Database connection failed", data: [] }, { status: 500 });
   }
-  const branches = await prisma.branch.findMany({
-    orderBy: { name: "asc" },
-    include: { _count: { select: { staff: true, departments: true } } },
-  });
-  return NextResponse.json({ success: true, data: branches });
 }
 
 export async function POST(req: NextRequest) {
