@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // app/api/attendance/upload-selfie/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth";

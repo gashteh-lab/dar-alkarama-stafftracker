@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // app/api/admin/holidays/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest, hasRole } from "@/lib/auth";

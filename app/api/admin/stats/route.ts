@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // app/api/admin/stats/route.ts
 // Quick stats endpoint for live dashboard widgets
 import { NextRequest, NextResponse } from "next/server";

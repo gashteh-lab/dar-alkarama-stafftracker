@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // app/api/reports/excel/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest, hasRole } from "@/lib/auth";

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // app/api/auth/login/route.ts — with rate limiting
 import { NextRequest, NextResponse } from "next/server";
 import { loginUser, createSession } from "@/lib/auth";

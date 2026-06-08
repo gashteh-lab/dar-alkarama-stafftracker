@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // app/api/auth/reset-password/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { resetPassword } from "@/lib/auth";

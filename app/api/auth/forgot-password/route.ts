@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // app/api/auth/forgot-password/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db/prisma";

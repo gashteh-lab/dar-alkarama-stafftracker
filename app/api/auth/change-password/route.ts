@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // app/api/auth/change-password/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest, verifyPassword, hashPassword, createAuditLog } from "@/lib/auth";

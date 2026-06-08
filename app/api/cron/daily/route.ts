@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // app/api/cron/daily/route.ts
 // Triggered daily by Vercel Cron or external scheduler
 // vercel.json: { "crons": [{ "path": "/api/cron/daily", "schedule": "0 22 * * *" }] }

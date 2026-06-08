@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // app/api/attendance/exception/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest, createAuditLog } from "@/lib/auth";

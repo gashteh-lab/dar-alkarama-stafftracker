@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // app/api/corrections/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest, hasRole, createAuditLog } from "@/lib/auth";

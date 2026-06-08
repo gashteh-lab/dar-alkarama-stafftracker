@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // app/api/shifts/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
