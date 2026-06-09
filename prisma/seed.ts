@@ -42,7 +42,7 @@ async function main() {
     create: {
       id:       "branch-main",
       name:     "Dar Al Karama Center — Main",
-      address:  "Sharjah, UAE",
+      address:  "Ras Al Khaimah, UAE",
       timezone: "Asia/Dubai",
       isActive: true,
     },
@@ -194,10 +194,10 @@ async function main() {
     update: {},
     create: {
       id:           "geo-main",
-      name:         "Dar Al Karama Center",
-      address:      "Sharjah, UAE",
-      latitude:     25.3463,
-      longitude:    55.4209,
+      name:         "Dar Al Karama Center — RAK",
+      address:      "Dar Al Karamah Trading Center, Ras Al Khaimah, UAE",
+      latitude:     25.7556819,
+      longitude:    55.9124779,
       radiusMeters: 200,
       branchId:     mainBranch.id,
       isActive:     true,
