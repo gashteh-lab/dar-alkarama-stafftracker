@@ -19,10 +19,10 @@ const SECRET = new TextEncoder().encode(
 const COOKIE_NAME = "stafftrack_session";
 
 const SESSION_MAX_AGE = {
-  STAFF:       parseInt(process.env.SESSION_MAX_AGE || "86400"),       // 24h
-  ADMIN:       parseInt(process.env.ADMIN_SESSION_MAX_AGE || "3600"),  // 1h
-  MANAGER:     parseInt(process.env.ADMIN_SESSION_MAX_AGE || "3600"),
-  SUPER_ADMIN: parseInt(process.env.ADMIN_SESSION_MAX_AGE || "3600"),
+  STAFF:       parseInt(process.env.SESSION_MAX_AGE || "2592000"),      // 30 days
+  ADMIN:       parseInt(process.env.ADMIN_SESSION_MAX_AGE || "86400"),  // 24h
+  MANAGER:     parseInt(process.env.ADMIN_SESSION_MAX_AGE || "86400"),  // 24h
+  SUPER_ADMIN: parseInt(process.env.ADMIN_SESSION_MAX_AGE || "86400"),  // 24h
 };
 
 // ─────────────────────────────────────────

@@ -8,10 +8,12 @@ import {
   LayoutDashboard, Calendar, User, FileEdit, Plane,
   WifiOff, RefreshCw, X, Download, Smartphone,
 } from "lucide-react";
-import { useOfflineSync } from "@/hooks/useOfflineSync";
-import { usePWAInstall }  from "@/hooks/usePWAInstall";
-import NotificationsBell  from "@/components/ui/NotificationsBell";
-import type { SessionUser } from "@/types";
+import { useOfflineSync }    from "@/hooks/useOfflineSync";
+import { usePWAInstall }     from "@/hooks/usePWAInstall";
+import { useSessionGuard }   from "@/hooks/useSessionGuard";
+import NotificationsBell     from "@/components/ui/NotificationsBell";
+import ReAuthModal           from "@/components/auth/ReAuthModal";
+import type { SessionUser }  from "@/types";
 
 const NAV_ITEMS = [
   { href: "/dashboard",   label: "Home",       icon: LayoutDashboard },
@@ -27,6 +29,7 @@ export default function StaffShellFinal({
   const pathname = usePathname();
   const { isOnline, pendingCount, isSyncing, runSync } = useOfflineSync(session.id);
   const { canInstall, showIOSInstructions, isStandalone, promptInstall } = usePWAInstall();
+  const { sessionExpired, employeeId, fullName, handleReAuthSuccess } = useSessionGuard();
   const [showInstall,  setShowInstall]  = useState(false);
   const [showUpdate,   setShowUpdate]   = useState(false);
 
@@ -48,6 +51,16 @@ export default function StaffShellFinal({
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950">
+
+      {/* ── Re-auth modal (session expired — stays in app mode) ── */}
+      {sessionExpired && (
+        <ReAuthModal
+          employeeId={employeeId || session.employeeId || ""}
+          fullName={fullName    || session.fullName    || "Staff"}
+          onSuccess={handleReAuthSuccess}
+        />
+      )}
+
       {/* Offline banner */}
       {!isOnline && (
         <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-amber-950 text-sm font-medium z-50 shrink-0">
