@@ -63,13 +63,25 @@ const withPWA = require("next-pwa")({
       },
     },
     {
-      // API routes — network first, fall back to cached response
+      // Auth routes — NEVER cache (login, logout, session, me)
+      urlPattern: /^https:\/\/.*\/api\/auth\/.*/i,
+      handler: "NetworkOnly",
+      method: "GET",
+    },
+    {
+      // Today's attendance status — never cache (must always be fresh)
+      urlPattern: /^https:\/\/.*\/api\/attendance\/today.*/i,
+      handler: "NetworkOnly",
+      method: "GET",
+    },
+    {
+      // Other attendance routes — network first, short cache
       urlPattern: /^https:\/\/.*\/api\/attendance\/.*/i,
       handler: "NetworkFirst",
       method: "GET",
       options: {
         cacheName: "attendance-api",
-        expiration: { maxEntries: 16, maxAgeSeconds: 24 * 60 * 60 },
+        expiration: { maxEntries: 16, maxAgeSeconds: 60 }, // 1 min only
         networkTimeoutSeconds: 10,
       },
     },

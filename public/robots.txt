@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /
+
+# StaffTrack is a private internal staff attendance system.
+# It should not be indexed by search engines.
