@@ -1,7 +1,3 @@
-// prisma/schema.prisma
-// StaffTrack PWA - Complete Database Schema
-// Default timezone: Asia/Dubai (UTC+4)
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,9 +8,352 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ─────────────────────────────────────────
-// ENUMS
-// ─────────────────────────────────────────
+model CompanySettings {
+  id                       String   @id @default(cuid())
+  name                     String   @default("StaffTrack")
+  logoUrl                  String?
+  timezone                 String   @default("Asia/Dubai")
+  workingWeekStart         Int      @default(0)
+  workingWeekEnd           Int      @default(4)
+  defaultGracePeriod       Int      @default(15)
+  geofenceRequired         Boolean  @default(true)
+  gpsAccuracyMin           Int      @default(100)
+  offlinePunchAllowed      Boolean  @default(true)
+  selfieRequired           Boolean  @default(false)
+  correctionAllowed        Boolean  @default(true)
+  managerApprovalRequired  Boolean  @default(false)
+  pushNotificationsEnabled Boolean  @default(true)
+  dateFormat               String   @default("DD/MM/YYYY")
+  timeFormat               String   @default("12h")
+  language                 String   @default("en")
+  theme                    String   @default("light")
+  updatedAt                DateTime @updatedAt
+  updatedBy                String?
+}
+
+model User {
+  id                    String              @id @default(cuid())
+  email                 String?             @unique
+  phone                 String?             @unique
+  employeeId            String?             @unique
+  passwordHash          String
+  role                  Role                @default(STAFF)
+  isActive              Boolean             @default(true)
+  failedAttempts        Int                 @default(0)
+  lockedAt              DateTime?
+  lastLoginAt           DateTime?
+  lastLoginIp           String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  attendanceEdited      AttendanceRecord[]  @relation("AttendanceEditor")
+  auditLogsCreated      AuditLog[]          @relation("AuditUser")
+  correctionsReviewed   CorrectionRequest[] @relation("CorrectionReviewer")
+  notificationsReceived Notification[]
+  passwordResets        PasswordReset[]
+  pushSubscriptions     PushSubscription[]
+  sessions              Session[]
+  profile               StaffProfile?
+
+  @@index([email])
+  @@index([employeeId])
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("sessions")
+}
+
+model PasswordReset {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
+}
+
+model Branch {
+  id          String         @id @default(cuid())
+  name        String
+  address     String?
+  timezone    String         @default("Asia/Dubai")
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  departments Department[]
+  geofences   Geofence[]
+  staff       StaffProfile[]
+
+  @@map("branches")
+}
+
+model Department {
+  id        String         @id @default(cuid())
+  name      String
+  branchId  String?
+  managerId String?
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  branch    Branch?        @relation(fields: [branchId], references: [id])
+  staff     StaffProfile[]
+
+  @@map("departments")
+}
+
+model StaffProfile {
+  id                String              @id @default(cuid())
+  userId            String              @unique
+  fullName          String
+  photoUrl          String?
+  departmentId      String?
+  position          String?
+  branchId          String?
+  managerId         String?
+  shiftId           String?
+  employmentStatus  EmploymentStatus    @default(ACTIVE)
+  joiningDate       DateTime?
+  workingDays       String[]            @default(["MON", "TUE", "WED", "THU", "FRI"])
+  punchMethod       String[]            @default(["GPS"])
+  geofenceId        String?
+  policyGroupId     String?
+  emergencyContact  String?
+  notes             String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  attendanceRecords AttendanceRecord[]
+  corrections       CorrectionRequest[]
+  punchEvents       PunchEvent[]
+  branch            Branch?             @relation(fields: [branchId], references: [id])
+  department        Department?         @relation(fields: [departmentId], references: [id])
+  geofence          Geofence?           @relation(fields: [geofenceId], references: [id])
+  shift             Shift?              @relation(fields: [shiftId], references: [id])
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([departmentId])
+  @@index([branchId])
+  @@map("staff_profiles")
+}
+
+model Shift {
+  id                String             @id @default(cuid())
+  name              String
+  startTime         String
+  endTime           String
+  gracePeriod       Int                @default(15)
+  breakDuration     Int                @default(60)
+  workingHours      Float              @default(8)
+  shiftType         ShiftType          @default(FIXED)
+  crossesMidnight   Boolean            @default(false)
+  color             String             @default("#1D9E75")
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  attendanceRecords AttendanceRecord[]
+  staff             StaffProfile[]
+
+  @@map("shifts")
+}
+
+model Geofence {
+  id           String         @id @default(cuid())
+  name         String
+  address      String?
+  latitude     Float
+  longitude    Float
+  radiusMeters Int            @default(200)
+  branchId     String?
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  branch       Branch?        @relation(fields: [branchId], references: [id])
+  staff        StaffProfile[]
+
+  @@map("geofences")
+}
+
+model AttendanceRecord {
+  id                 String              @id @default(cuid())
+  staffId            String
+  date               DateTime            @db.Date
+  shiftId            String?
+  punchIn            DateTime?
+  punchOut           DateTime?
+  punchInLat         Float?
+  punchInLng         Float?
+  punchOutLat        Float?
+  punchOutLng        Float?
+  punchInAddress     String?
+  punchOutAddress    String?
+  punchInDevice      Json?
+  punchOutDevice     Json?
+  status             AttendanceStatus    @default(PRESENT)
+  lateMinutes        Int                 @default(0)
+  earlyLeaveMinutes  Int                 @default(0)
+  overtimeMinutes    Int                 @default(0)
+  totalWorkedMinutes Int                 @default(0)
+  breakMinutes       Int                 @default(0)
+  source             PunchSource         @default(ONLINE)
+  editedBy           String?
+  editReason         String?
+  isFlagged          Boolean             @default(false)
+  flagReason         String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  editor             User?               @relation("AttendanceEditor", fields: [editedBy], references: [id])
+  shift              Shift?              @relation(fields: [shiftId], references: [id])
+  staff              StaffProfile        @relation(fields: [staffId], references: [id])
+  corrections        CorrectionRequest[]
+  punchEvents        PunchEvent[]
+
+  @@unique([staffId, date])
+  @@index([staffId])
+  @@index([date])
+  @@index([status])
+  @@map("attendance_records")
+}
+
+model PunchEvent {
+  id         String            @id @default(cuid())
+  recordId   String?
+  staffId    String
+  type       String
+  timestamp  DateTime
+  lat        Float?
+  lng        Float?
+  address    String?
+  accuracy   Float?
+  deviceInfo Json?
+  ipAddress  String?
+  source     PunchSource       @default(ONLINE)
+  isSynced   Boolean           @default(true)
+  syncedAt   DateTime?
+  createdAt  DateTime          @default(now())
+  record     AttendanceRecord? @relation(fields: [recordId], references: [id])
+  staff      StaffProfile      @relation(fields: [staffId], references: [id])
+
+  @@index([staffId])
+  @@index([timestamp])
+  @@map("punch_events")
+}
+
+model OfflineSyncQueue {
+  id              String    @id @default(cuid())
+  staffId         String
+  eventType       String
+  payload         Json
+  deviceTimestamp DateTime
+  isSynced        Boolean   @default(false)
+  syncAttempts    Int       @default(0)
+  syncedAt        DateTime?
+  errorMessage    String?
+  createdAt       DateTime  @default(now())
+
+  @@index([staffId, isSynced])
+  @@map("offline_sync_queue")
+}
+
+model CorrectionRequest {
+  id              String            @id @default(cuid())
+  staffId         String
+  recordId        String?
+  date            DateTime          @db.Date
+  requestType     CorrectionType
+  correctPunchIn  DateTime?
+  correctPunchOut DateTime?
+  reason          String
+  attachmentUrl   String?
+  status          CorrectionStatus  @default(PENDING)
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  reviewComment   String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  record          AttendanceRecord? @relation(fields: [recordId], references: [id])
+  reviewer        User?             @relation("CorrectionReviewer", fields: [reviewedBy], references: [id])
+  staff           StaffProfile      @relation(fields: [staffId], references: [id])
+
+  @@index([staffId])
+  @@index([status])
+  @@map("correction_requests")
+}
+
+model Holiday {
+  id          String   @id @default(cuid())
+  name        String
+  date        DateTime @db.Date
+  isRecurring Boolean  @default(false)
+  branchId    String?
+  createdAt   DateTime @default(now())
+
+  @@index([date])
+  @@map("holidays")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean          @default(false)
+  sentAt    DateTime?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model PushSubscription {
+  id         String   @id @default(cuid())
+  userId     String
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  deviceInfo Json?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String?
+  action    AuditAction
+  entity    String?
+  entityId  String?
+  oldValue  Json?
+  newValue  Json?
+  reason    String?
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime    @default(now())
+  user      User?       @relation("AuditUser", fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
 
 enum Role {
   SUPER_ADMIN
@@ -111,415 +450,4 @@ enum NotificationType {
   GEOFENCE_EXCEPTION
   ANNOUNCEMENT
   OFFLINE_SYNCED
-}
-
-// ─────────────────────────────────────────
-// COMPANY SETTINGS
-// ─────────────────────────────────────────
-
-model CompanySettings {
-  id                     String   @id @default(cuid())
-  name                   String   @default("StaffTrack")
-  logoUrl                String?
-  timezone               String   @default("Asia/Dubai")
-  workingWeekStart       Int      @default(0) // 0=Sun, 1=Mon
-  workingWeekEnd         Int      @default(4) // 4=Thu, 6=Sat
-  defaultGracePeriod     Int      @default(15) // minutes
-  geofenceRequired       Boolean  @default(true)
-  gpsAccuracyMin         Int      @default(100) // meters
-  offlinePunchAllowed    Boolean  @default(true)
-  selfieRequired         Boolean  @default(false)
-  correctionAllowed      Boolean  @default(true)
-  managerApprovalRequired Boolean @default(false)
-  pushNotificationsEnabled Boolean @default(true)
-  dateFormat             String   @default("DD/MM/YYYY")
-  timeFormat             String   @default("12h")
-  language               String   @default("en")
-  theme                  String   @default("light")
-  updatedAt              DateTime @updatedAt
-  updatedBy              String?
-}
-
-// ─────────────────────────────────────────
-// USERS & AUTH
-// ─────────────────────────────────────────
-
-model User {
-  id              String    @id @default(cuid())
-  email           String?   @unique
-  phone           String?   @unique
-  employeeId      String?   @unique
-  passwordHash    String
-  role            Role      @default(STAFF)
-  isActive        Boolean   @default(true)
-  failedAttempts  Int       @default(0)
-  lockedAt        DateTime?
-  lastLoginAt     DateTime?
-  lastLoginIp     String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  // Relations
-  profile             StaffProfile?
-  sessions            Session[]
-  passwordResets      PasswordReset[]
-  pushSubscriptions   PushSubscription[]
-  auditLogsCreated    AuditLog[]           @relation("AuditUser")
-  attendanceEdited    AttendanceRecord[]   @relation("AttendanceEditor")
-  correctionsReviewed CorrectionRequest[]  @relation("CorrectionReviewer")
-  notificationsReceived Notification[]
-
-  @@index([email])
-  @@index([employeeId])
-  @@map("users")
-}
-
-model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  expiresAt DateTime
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([token])
-  @@index([userId])
-  @@map("sessions")
-}
-
-model PasswordReset {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("password_resets")
-}
-
-// ─────────────────────────────────────────
-// ORGANIZATION
-// ─────────────────────────────────────────
-
-model Branch {
-  id        String   @id @default(cuid())
-  name      String
-  address   String?
-  timezone  String   @default("Asia/Dubai")
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  departments  Department[]
-  staff        StaffProfile[]
-  geofences    Geofence[]
-
-  @@map("branches")
-}
-
-model Department {
-  id        String   @id @default(cuid())
-  name      String
-  branchId  String?
-  managerId String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-
-  branch Branch?        @relation(fields: [branchId], references: [id])
-  staff  StaffProfile[]
-
-  @@map("departments")
-}
-
-// ─────────────────────────────────────────
-// STAFF PROFILES
-// ─────────────────────────────────────────
-
-model StaffProfile {
-  id               String           @id @default(cuid())
-  userId           String           @unique
-  fullName         String
-  photoUrl         String?
-  departmentId     String?
-  position         String?
-  branchId         String?
-  managerId        String?          // another user's ID
-  shiftId          String?
-  employmentStatus EmploymentStatus @default(ACTIVE)
-  joiningDate      DateTime?
-  workingDays      String[]         @default(["MON","TUE","WED","THU","FRI"])
-  punchMethod      String[]         @default(["GPS"])
-  geofenceId       String?
-  policyGroupId    String?
-  emergencyContact String?
-  notes            String?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-
-  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  department Department?  @relation(fields: [departmentId], references: [id])
-  branch     Branch?      @relation(fields: [branchId], references: [id])
-  shift      Shift?       @relation(fields: [shiftId], references: [id])
-  geofence   Geofence?    @relation(fields: [geofenceId], references: [id])
-
-  attendanceRecords AttendanceRecord[]
-  punchEvents       PunchEvent[]
-  corrections       CorrectionRequest[]
-
-  @@index([userId])
-  @@index([departmentId])
-  @@index([branchId])
-  @@map("staff_profiles")
-}
-
-// ─────────────────────────────────────────
-// SHIFTS
-// ─────────────────────────────────────────
-
-model Shift {
-  id             String    @id @default(cuid())
-  name           String
-  startTime      String    // "08:00" HH:mm
-  endTime        String    // "17:00" HH:mm
-  gracePeriod    Int       @default(15) // minutes
-  breakDuration  Int       @default(60) // minutes
-  workingHours   Float     @default(8)
-  shiftType      ShiftType @default(FIXED)
-  crossesMidnight Boolean  @default(false)
-  color          String    @default("#1D9E75")
-  isActive       Boolean   @default(true)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  staff             StaffProfile[]
-  attendanceRecords AttendanceRecord[]
-
-  @@map("shifts")
-}
-
-// ─────────────────────────────────────────
-// LOCATIONS & GEOFENCING
-// ─────────────────────────────────────────
-
-model Geofence {
-  id            String   @id @default(cuid())
-  name          String
-  address       String?
-  latitude      Float
-  longitude     Float
-  radiusMeters  Int      @default(200)
-  branchId      String?
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  branch Branch?        @relation(fields: [branchId], references: [id])
-  staff  StaffProfile[]
-
-  @@map("geofences")
-}
-
-// ─────────────────────────────────────────
-// ATTENDANCE
-// ─────────────────────────────────────────
-
-model AttendanceRecord {
-  id               String           @id @default(cuid())
-  staffId          String
-  date             DateTime         @db.Date
-  shiftId          String?
-  punchIn          DateTime?
-  punchOut         DateTime?
-  punchInLat       Float?
-  punchInLng       Float?
-  punchOutLat      Float?
-  punchOutLng      Float?
-  punchInAddress   String?
-  punchOutAddress  String?
-  punchInDevice    Json?
-  punchOutDevice   Json?
-  status           AttendanceStatus @default(PRESENT)
-  lateMinutes      Int              @default(0)
-  earlyLeaveMinutes Int             @default(0)
-  overtimeMinutes  Int              @default(0)
-  totalWorkedMinutes Int            @default(0)
-  breakMinutes     Int              @default(0)
-  source           PunchSource      @default(ONLINE)
-  editedBy         String?
-  editReason       String?
-  isFlagged        Boolean          @default(false)
-  flagReason       String?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-
-  staff      StaffProfile     @relation(fields: [staffId], references: [id])
-  shift      Shift?           @relation(fields: [shiftId], references: [id])
-  editor     User?            @relation("AttendanceEditor", fields: [editedBy], references: [id])
-  punchEvents PunchEvent[]
-  corrections CorrectionRequest[]
-
-  @@unique([staffId, date])
-  @@index([staffId])
-  @@index([date])
-  @@index([status])
-  @@map("attendance_records")
-}
-
-model PunchEvent {
-  id           String      @id @default(cuid())
-  recordId     String?
-  staffId      String
-  type         String      // "PUNCH_IN" | "PUNCH_OUT"
-  timestamp    DateTime
-  lat          Float?
-  lng          Float?
-  address      String?
-  accuracy     Float?      // GPS accuracy in meters
-  deviceInfo   Json?       // browser, OS, device type
-  ipAddress    String?
-  source       PunchSource @default(ONLINE)
-  isSynced     Boolean     @default(true)
-  syncedAt     DateTime?
-  createdAt    DateTime    @default(now())
-
-  record AttendanceRecord? @relation(fields: [recordId], references: [id])
-  staff  StaffProfile      @relation(fields: [staffId], references: [id])
-
-  @@index([staffId])
-  @@index([timestamp])
-  @@map("punch_events")
-}
-
-// ─────────────────────────────────────────
-// OFFLINE SYNC
-// ─────────────────────────────────────────
-
-model OfflineSyncQueue {
-  id              String   @id @default(cuid())
-  staffId         String
-  eventType       String
-  payload         Json
-  deviceTimestamp DateTime
-  isSynced        Boolean  @default(false)
-  syncAttempts    Int      @default(0)
-  syncedAt        DateTime?
-  errorMessage    String?
-  createdAt       DateTime @default(now())
-
-  @@index([staffId, isSynced])
-  @@map("offline_sync_queue")
-}
-
-// ─────────────────────────────────────────
-// CORRECTION REQUESTS
-// ─────────────────────────────────────────
-
-model CorrectionRequest {
-  id              String           @id @default(cuid())
-  staffId         String
-  recordId        String?
-  date            DateTime         @db.Date
-  requestType     CorrectionType
-  correctPunchIn  DateTime?
-  correctPunchOut DateTime?
-  reason          String
-  attachmentUrl   String?
-  status          CorrectionStatus @default(PENDING)
-  reviewedBy      String?
-  reviewedAt      DateTime?
-  reviewComment   String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-
-  staff    StaffProfile     @relation(fields: [staffId], references: [id])
-  record   AttendanceRecord? @relation(fields: [recordId], references: [id])
-  reviewer User?            @relation("CorrectionReviewer", fields: [reviewedBy], references: [id])
-
-  @@index([staffId])
-  @@index([status])
-  @@map("correction_requests")
-}
-
-// ─────────────────────────────────────────
-// HOLIDAYS & LEAVE
-// ─────────────────────────────────────────
-
-model Holiday {
-  id          String   @id @default(cuid())
-  name        String
-  date        DateTime @db.Date
-  isRecurring Boolean  @default(false)
-  branchId    String?
-  createdAt   DateTime @default(now())
-
-  @@index([date])
-  @@map("holidays")
-}
-
-// ─────────────────────────────────────────
-// NOTIFICATIONS
-// ─────────────────────────────────────────
-
-model Notification {
-  id        String           @id @default(cuid())
-  userId    String
-  type      NotificationType
-  title     String
-  body      String
-  data      Json?
-  isRead    Boolean          @default(false)
-  sentAt    DateTime?
-  readAt    DateTime?
-  createdAt DateTime         @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, isRead])
-  @@map("notifications")
-}
-
-model PushSubscription {
-  id           String   @id @default(cuid())
-  userId       String
-  endpoint     String   @unique
-  p256dh       String
-  auth         String
-  deviceInfo   Json?
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("push_subscriptions")
-}
-
-// ─────────────────────────────────────────
-// AUDIT LOGS
-// ─────────────────────────────────────────
-
-model AuditLog {
-  id         String      @id @default(cuid())
-  userId     String?
-  action     AuditAction
-  entity     String?     // table name
-  entityId   String?     // record ID
-  oldValue   Json?
-  newValue   Json?
-  reason     String?
-  ipAddress  String?
-  userAgent  String?
-  timestamp  DateTime    @default(now())
-
-  user User? @relation("AuditUser", fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([action])
-  @@index([timestamp])
-  @@map("audit_logs")
 }
