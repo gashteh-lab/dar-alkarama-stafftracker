@@ -3,6 +3,7 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import StandaloneGuard from "@/components/pwa/StandaloneGuard";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Fingerprint, AlertCircle, Wifi, WifiOff } from "lucide-react";
@@ -162,12 +163,14 @@ function LoginContent() {
 // Outer page wraps with Suspense — required by Next.js 14 for useSearchParams
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    }>
-      <LoginContent />
-    </Suspense>
+    <StandaloneGuard>
+      <Suspense fallback={
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }>
+        <LoginContent />
+      </Suspense>
+    </StandaloneGuard>
   );
 }
