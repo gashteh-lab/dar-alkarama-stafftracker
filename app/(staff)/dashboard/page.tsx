@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { getCurrentPosition, reverseGeocode, getDeviceInfo, GeofenceError } from "@/lib/geofence";
 import { queueOfflinePunch } from "@/lib/offline/indexeddb";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
+import InstallAppBanner from "@/components/pwa/InstallAppBanner";
 import type { TodayStatus, AttendanceRecord } from "@/types";
 
 // ─────────────────────────────────────────
@@ -92,7 +93,7 @@ export default function StaffDashboard() {
   // ── Load today's status ─────────────────────────────────────
   const loadTodayStatus = useCallback(async () => {
     try {
-      const res = await fetch("/api/attendance/today");
+      const res = await fetch("/api/attendance/today", { cache: "no-store" });
       if (!res.ok) return;
       const { data } = await res.json();
       setTodayStatus(data);
@@ -105,7 +106,7 @@ export default function StaffDashboard() {
 
   const loadRecentRecords = useCallback(async () => {
     try {
-      const res = await fetch("/api/attendance/history?limit=5");
+      const res = await fetch("/api/attendance/history?limit=5", { cache: "no-store" });
       if (!res.ok) return;
       const { data } = await res.json();
       setRecentRecords(data?.records || []);
@@ -265,6 +266,9 @@ export default function StaffDashboard() {
   // ────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+
+      {/* ── Install App Banner (shows only when not in standalone mode) ── */}
+      <InstallAppBanner />
 
       {/* ── Header ── */}
       <div className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-5 pt-4 pb-5">
